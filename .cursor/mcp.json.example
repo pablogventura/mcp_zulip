@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "zulip": {
+      "command": "python3",
+      "args": ["-m", "mcp_zulip"],
+      "env": {
+        "ZULIP_CONFIG_FILE": "${workspaceFolder}/.zuliprc"
+      }
+    }
+  }
+}
