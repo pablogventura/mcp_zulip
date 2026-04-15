@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import subprocess
 import sys
 from pathlib import Path
 from typing import Any
@@ -27,9 +28,37 @@ def _merge_mcp_servers(
     return merged
 
 
+def resolve_cursor_project_root(start: Path, *, use_cwd_only: bool) -> Path:
+    """Directory where Cursor expects project `.cursor/mcp.json`: repo root, not a subfolder.
+
+    Uses ``git rev-parse --show-toplevel`` from ``start``, then walking parents for ``.git``.
+    If ``use_cwd_only`` is True, returns ``start.resolve()`` without git detection.
+    """
+    start = start.resolve()
+    if use_cwd_only:
+        return start
+    try:
+        cp = subprocess.run(
+            ["git", "-C", str(start), "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+        )
+        if cp.returncode == 0 and (out := cp.stdout.strip()):
+            return Path(out).resolve()
+    except (FileNotFoundError, subprocess.TimeoutExpired, OSError):
+        pass
+    for p in [start, *start.parents]:
+        if (p / ".git").exists():
+            return p.resolve()
+    return start
+
+
 def cmd_init_cursor(args: argparse.Namespace) -> int:
-    """Write or merge .cursor/mcp.json in cwd."""
-    root = Path(args.directory).resolve()
+    """Write or merge ``<project>/.cursor/mcp.json`` (Cursor project MCP path)."""
+    start = Path(args.directory).resolve()
+    root = resolve_cursor_project_root(start, use_cwd_only=args.use_cwd)
     cursor_dir = root / ".cursor"
     cursor_dir.mkdir(parents=True, exist_ok=True)
     target = cursor_dir / "mcp.json"
@@ -71,7 +100,8 @@ def cmd_init_cursor(args: argparse.Namespace) -> int:
         return 1
 
     target.write_text(json.dumps(cfg, indent=2) + "\n", encoding="utf-8")
-    print(f"mcp-zulip: wrote {target} (server key: {args.server_name!r})")
+    rel = f" (from cwd {start})" if root != start else ""
+    print(f"mcp-zulip: wrote {target} (server key: {args.server_name!r}){rel}")
     return 0
 
 
@@ -83,7 +113,15 @@ def main() -> None:
             "--directory",
             "-C",
             default=".",
-            help="Project root where .cursor/mcp.json will be written",
+            help=(
+                "Starting directory (default: .). Resolves git root for .cursor/mcp.json "
+                "unless --use-cwd."
+            ),
+        )
+        parser.add_argument(
+            "--use-cwd",
+            action="store_true",
+            help="Write .cursor/mcp.json under -C only (no git root). For non-git projects.",
         )
         parser.add_argument(
             "--server-name",

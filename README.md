@@ -16,11 +16,39 @@ Use a **dedicated bot account** with minimal permissions when the MCP is shared 
 
 ## Install
 
+### From PyPI (when published)
+
 ```bash
-pipx install "mcp-zulip"
-# or from a clone:
-pipx install .
+pipx install mcp-zulip
 ```
+
+### From a local checkout
+
+Inside the repo (or pass an absolute path to the project root):
+
+```bash
+cd /path/to/mcp_zulip
+pipx install .
+# same idea:
+pipx install /path/to/mcp_zulip
+```
+
+### From GitHub (no local clone)
+
+Install the latest `main` straight from the remote:
+
+```bash
+pipx install "git+https://github.com/pablogventura/mcp_zulip.git"
+```
+
+To pin a branch or tag:
+
+```bash
+pipx install "git+https://github.com/pablogventura/mcp_zulip.git@v0.1.0"
+pipx install "git+https://github.com/pablogventura/mcp_zulip.git@main"
+```
+
+(`pip` also accepts `git+https://…`; `pipx` delegates to pip under the hood.)
 
 Develop with a virtualenv:
 
@@ -33,10 +61,22 @@ python -m venv .venv
 
 ### Quick merge (recommended)
 
-From your project root (where `.cursor` should live):
+Cursor loads **project** MCP config from **`<workspaceFolder>/.cursor/mcp.json`** (the folder you open in Cursor), not from arbitrary subdirectories. User-level config is separate: `~/.cursor/mcp.json` (not modified by `init-cursor`).
+
+`init-cursor` writes exactly there: it resolves the **Git repository root** from your current directory (same idea as opening the repo in Cursor). So you can run it from a subfolder and it still updates the root:
 
 ```bash
+cd /path/to/my-repo
 mcp-zulip init-cursor
+# or from my-repo/src/pkg:
+cd /path/to/my-repo/src/pkg
+mcp-zulip init-cursor   # still writes /path/to/my-repo/.cursor/mcp.json
+```
+
+If you are **not** using Git, or you really want the file under the current directory only:
+
+```bash
+mcp-zulip init-cursor --use-cwd
 ```
 
 This creates or updates `.cursor/mcp.json` with:
