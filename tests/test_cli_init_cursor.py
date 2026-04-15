@@ -1,7 +1,30 @@
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
+
+
+def test_init_cursor_alias_double_dash_no_zulip_env(tmp_path: Path) -> None:
+    """--init-cursor must not require Zulip credentials (regression for flag-style UX)."""
+    env = {k: v for k, v in os.environ.items() if not k.startswith("ZULIP")}
+    rc = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "mcp_zulip",
+            "--init-cursor",
+            "--directory",
+            str(tmp_path),
+            "--use-env",
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+    assert rc.returncode == 0, rc.stderr
+    assert (tmp_path / ".cursor" / "mcp.json").is_file()
 
 
 def test_init_cursor_writes_mcp_json(tmp_path: Path) -> None:

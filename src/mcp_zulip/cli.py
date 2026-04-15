@@ -106,7 +106,12 @@ def cmd_init_cursor(args: argparse.Namespace) -> int:
 
 
 def main() -> None:
-    argv = sys.argv[1:]
+    argv = list(sys.argv[1:])
+    # Users often try `--init-cursor` (flag style); that must not start the MCP server
+    # or require Zulip credentials — only the `init-cursor` subcommand does.
+    if argv and argv[0] in ("--init-cursor", "-init-cursor"):
+        argv[0] = "init-cursor"
+
     if argv and argv[0] == "init-cursor":
         parser = argparse.ArgumentParser(prog="mcp-zulip init-cursor")
         parser.add_argument(

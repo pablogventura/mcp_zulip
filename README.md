@@ -68,6 +68,8 @@ Cursor loads **project** MCP config from **`<workspaceFolder>/.cursor/mcp.json`*
 ```bash
 cd /path/to/my-repo
 mcp-zulip init-cursor
+# equivalent (no Zulip env needed for this step):
+mcp-zulip --init-cursor
 # or from my-repo/src/pkg:
 cd /path/to/my-repo/src/pkg
 mcp-zulip init-cursor   # still writes /path/to/my-repo/.cursor/mcp.json
@@ -91,6 +93,8 @@ Use API keys via environment placeholders instead:
 
 ```bash
 mcp-zulip init-cursor --use-env
+# or:
+mcp-zulip --init-cursor --use-env
 ```
 
 If Cursor’s GUI does not inherit your shell `PATH`, set `"command"` to an **absolute** path to the Python binary (or to the `mcp-zulip` script from `pipx`).
